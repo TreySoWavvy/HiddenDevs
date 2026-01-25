@@ -175,7 +175,11 @@ function LockOnController:GetTargetInCone(Max_Angle : number) --// Takes the lis
 			print(Potential_Targets)
 			if Potential_Targets then
 				local Best_Target, Best_Angle = nil, Max_Angle;
-
+				
+				
+				--// Iterate over each target and determine which one is closest to the center of the camera's look vector.
+				--// The closer they are, the better.
+				
 				for _, Entity in ipairs(Potential_Targets) do
 					local HRP = Entity.HumanoidRootPart;
 					local Current_Direction = HRP.Position - Cam_Position;
@@ -183,6 +187,9 @@ function LockOnController:GetTargetInCone(Max_Angle : number) --// Takes the lis
 
 					if Current_Distance <= self.Settings.MaxLockDistance then
 						local Current_Target_Angle = angleBetween(Cam_Look_Vector, Current_Direction.Unit)
+						
+						--// If this entity is closer than the one before them
+						--// Use them.
 						if Current_Target_Angle <= Best_Angle then
 							Best_Angle = Current_Target_Angle;
 							Best_Target = Entity;
@@ -381,7 +388,10 @@ function LockOnController:Enable() --// Enables the lock on, and attempts to get
 
 	self._smoothedRootCF = nil
 	
+	--// Attempt to get a new target.
 	self:GetTargetInCone(self.Settings.LockConeAngle):andThen(function(New_Target)
+		
+		--// If no target was found, disable the lock on.
 		if not New_Target then
 			warn("No Targets found to lock onto.");
 			return self:Disable();
@@ -408,7 +418,8 @@ function LockOnController:Enable() --// Enables the lock on, and attempts to get
 			self:Disable()
 		end), "Disconnect", "Target_Died");
 		
-		
+			
+		--// Update the lock on camera using heartbeat.
 		self:Connect(RS.Heartbeat:Connect(function(Delta_Time : number)
 			self:UpdateCharacterFacing(Delta_Time);
 			self:HandleMouseSwitch(Delta_Time);
