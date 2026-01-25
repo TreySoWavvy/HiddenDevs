@@ -2,7 +2,6 @@
 --// CLASS: SERVICE
 --// TIMESTAMP: 2 JAN 2026
 --// DESCRIPTOR: HANDLES MORPHS ON PLAYER CHARACTERS;
---// BY: TreySoWavvy (Don)
 ----
 
 
@@ -154,11 +153,14 @@ end;
 function System:Clear(Rig : Model) --// Clears a Morph from a specific Rig.
 	return Promise.new(function(resolve, reject)
 		local Morph_Folder = Rig:FindFirstChild("Morph");
-
+		
+		--// Delete the morph folder
 		if Morph_Folder then
 			Debris(Morph_Folder)
 		end
 
+
+		--// Toggle any leftover accessories and make all the body parts visible again.
 		self:ToggleHeadAccessories(Rig, true);
 		self:ToggleBodyParts(Rig, true);
 		
@@ -177,11 +179,14 @@ function System:Get(Rig : Model, Morph_Name : string, Options : any)
 		
 		Options = Options or {};
 		
+		--// First, we check to see if the character is eligible for a morph.
 		print(Rig.Name, Morph_Name, Options)
 		assert(Morph_Name, "A Morph name must be provided.");
 		assert(Rig, "A Humanoid-Based Rig must be provided.");
 		assert(Morph_Library:GetInfo(Morph_Name), Morph_Name .. " was not properly added to the Morph Library ModuleScript!")
 		
+		
+		--// If the character is attached to a player, lets check to make sure they are eligible to use that morph.
 		if Player then
 			local Can_Use_Morph = Morph_Library:CanUseMorph(Player, Morph_Name);
 			local Is_Developer = Global.IsDeveloper(Player);
@@ -193,6 +198,7 @@ function System:Get(Rig : Model, Morph_Name : string, Options : any)
 		end
 		
 		
+		--// Get all the necessary instances.
 		local Humanoid = Rig:FindFirstChild("Humanoid");
 		local Head = Rig:FindFirstChild("Head");
 		local Shirt = Rig:FindFirstChild("Shirt");
@@ -200,12 +206,13 @@ function System:Get(Rig : Model, Morph_Name : string, Options : any)
 		assert(Humanoid.Health > 0, "The Rig must be alive to properly add the morph.");
 		
 		
+		--// Check to make sure the morph we are trying to get even exists.
 		local Current_Morph_Model = Rig:FindFirstChild("Morph");
 		local New_Morph_Model = self:Find(Morph_Name, true);
 		assert(New_Morph_Model, string.format("' %s ' was not found in the morph folder.", Morph_Name));
 		
-		local Morph_Info = Morph_Library:GetInfo(Morph_Name);
 		
+		local Morph_Info = Morph_Library:GetInfo(Morph_Name);
 		local Morph_Shirt = (New_Morph_Model and New_Morph_Model:FindFirstChild("Shirt"));
 		local Morph_Pants = (New_Morph_Model and New_Morph_Model:FindFirstChild("Pants"));
 		local Allow_Facial_Features = (Options.Allow_Facial_Features or Morph_Info.Allow_Facial_Features)
@@ -247,6 +254,7 @@ function System:Get(Rig : Model, Morph_Name : string, Options : any)
 		end
 
 		
+		--// Begin attaching the morph to the matching body parts.
 		for _, Sub_Model in pairs(New_Morph_Model:GetChildren()) do
 			local Body_Part = Rig:FindFirstChild(Sub_Model.Name);
 			
@@ -326,6 +334,7 @@ function System:Get(Rig : Model, Morph_Name : string, Options : any)
 		
 		task.wait()
 		
+		--// Parent the morph folder to that character, and clear any unecessary accessories for uniformity.
 		Folder.Parent = Rig;
 		self:ClearAccessories(Rig, {
 			Allow_Facial_Features = Allow_Facial_Features;
